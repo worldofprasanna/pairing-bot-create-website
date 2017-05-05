@@ -6,9 +6,11 @@ BUCKET_NAME = 'alexa-website'
 DEST_BUCKET_NAME = 'alexa-website1494005721768'
 
 def alexa_s3_website_create(event,context):
+
     access_key=os.environ['aws_access_key_id']
     secret_key=os.environ['aws_secret_access_key']
     conn = boto.s3.connect_to_region(S3_LOCATION,aws_access_key_id=access_key,aws_secret_access_key=secret_key)
+
 
     error_html = """
     <html>
@@ -29,6 +31,7 @@ def alexa_s3_website_create(event,context):
     for k in src_website_bucket.list():
         website_bucket.copy_key(k.key, BUCKET_NAME, k.key)
     website_bucket.set_acl('public-read','index.html')
+
     # index_key = website_bucket.new_key('index.html')
     # index_key.content_type = 'text/html'
     # index_key.set_contents_from_filename('/Users/kanthivel/Desktop/index.html', policy='public-read')
@@ -41,5 +44,10 @@ def alexa_s3_website_create(event,context):
 
 
     # now get the website configuration, just to check it
-    return 'http://'+DEST_BUCKET_NAME+'.s3-website-'+S3_LOCATION+'.amazonaws.com/'
+    # return 'http://'+DEST_BUCKET_NAME+'.s3-website-'+S3_LOCATION+'.amazonaws.com/'
 
+    return {"isBase64Encoded": 'false',
+    "statusCode": 200,
+    "headers": {},
+    "body": '{"url":"http://'+DEST_BUCKET_NAME+'.s3-website-'+S3_LOCATION+'.amazonaws.com/"}'
+             }
