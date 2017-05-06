@@ -26,6 +26,9 @@ def alexa_s3_website_create(event,context):
     if action == 'change-border':
         border_value = value
 
+    if action == 'create-website':
+        website_name = value
+
     index_html = """
         <html>
             <head><title>Pairing Alexa</title>
@@ -34,10 +37,10 @@ def alexa_s3_website_create(event,context):
           </script>
             </head>
           <body style="background-image: url('{background_value}'); border-style: {border_value} ">
-            <center><h1>Hello! I am Alexa :)</h1></center>
+            <center><h1>Hello! Welcome to {website_name} :)</h1></center>
           </body>
         </html>
-    """.format(background_value=background_value,border_value=border_value)
+    """.format(background_value=background_value,border_value=border_value, website_name=website_name)
 
     error_html = """
     <html>
