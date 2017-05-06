@@ -1,5 +1,6 @@
 import boto
 import os
+import json
 
 S3_LOCATION = 'us-west-1'
 BUCKET_NAME = 'alexa-website'
@@ -26,16 +27,16 @@ def alexa_s3_website_create(event,context):
         border_value = value
 
     index_html = """
-    <html>
-        <head><title>Pairing Alexa</title>
-        <script language="JavaScript" type="text/javascript">
-        setTimeout("location.href='index.html'",10000 )
-      </script>
-        </head>
-      <body style="background-image: url('{background_value}'); border-style: {border_value} ">
-        <p>Hello! I am Alexa :)</p>
-      </body>
-    </html>
+        <html>
+            <head><title>Pairing Alexa</title>
+            <script language="JavaScript" type="text/javascript">
+            setTimeout("location.href='index.html'",10000 )
+          </script>
+            </head>
+          <body style="background-image: url('{background_value}'); border-style: {border_value} ">
+            <center><h1>Hello! I am Alexa :)</h1></center>
+          </body>
+        </html>
     """.format(background_value=background_value,border_value=border_value)
 
     error_html = """
