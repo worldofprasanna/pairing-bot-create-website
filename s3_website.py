@@ -1,24 +1,41 @@
-import boto
 import os
-import json
+
+import boto
+from boto.s3.key import Key
 
 S3_LOCATION = 'us-west-1'
 BUCKET_NAME = 'alexa-website'
 DEST_BUCKET_NAME = 'alexa-website1494005721768'
 
 def alexa_s3_website_create(event,context):
+    PROPERTY_FILE_NAME = 'properties.txt'
     print event
     body = event['body']
-    background_value = ''
-    border_value = ''
+    access_key = os.environ['aws_access_key_id']
+    secret_key = os.environ['aws_secret_access_key']
     key_value = body.split(',')
     action = key_value[0]
     value = key_value[1]
-    access_key=os.environ['aws_access_key_id']
-    secret_key=os.environ['aws_secret_access_key']
-    # access_key = 'AKIAJZRFLFT2F6M5YNOQ'
-    # secret_key = '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'
-    conn = boto.s3.connect_to_region(S3_LOCATION,aws_access_key_id=access_key,aws_secret_access_key=secret_key)
+    background_value, border_value, website_name ='','',''
+    conn = boto.s3.connect_to_region(S3_LOCATION, aws_access_key_id=access_key, aws_secret_access_key=secret_key)
+    src_website_bucket = conn.get_bucket(BUCKET_NAME)
+    if(action == 'create-website'):
+        property_key = src_website_bucket.new_key('properties.txt')
+        property_key.content_type = 'text/plain'
+        property_key.set_contents_from_string('', policy='public-read')
+        if value == 'women who code':
+            PROPERTY_FILE_NAME = 'properties1.txt'
+
+    conn = boto.s3.connect_to_region(S3_LOCATION, aws_access_key_id=access_key, aws_secret_access_key=secret_key)
+    src_website_bucket = conn.get_bucket(BUCKET_NAME)
+    k = Key(src_website_bucket)
+    k.key = PROPERTY_FILE_NAME
+    k.open()
+    properties_string = k.read()
+    print properties_string
+    if properties_string != '':
+        properties_array = properties_string.split('\n')
+        background_value, border_value, website_name = properties_array[0], properties_array[1], properties_array[2]
 
     if action == 'change-background':
         background_value = value + '.jpg'
@@ -29,18 +46,19 @@ def alexa_s3_website_create(event,context):
     if action == 'create-website':
         website_name = value
 
+
     index_html = """
         <html>
             <head><title>Pairing Alexa</title>
             <script language="JavaScript" type="text/javascript">
-            setTimeout("location.href='index.html'",10000 )
+            setTimeout("location.href='index.html'",7000 )
           </script>
             </head>
-          <body style="background-image: url('{background_value}'); border-style: {border_value} ">
-            <center><h1>Hello! Welcome to {website_name} :)</h1></center>
+          <body style="background-color:black;background-image: url('{background_value}'); border: {border_value} white 3px; background-size:cover">
+            <center><h1 style="color:white">Hello! Welcome to {website_name} :)</h1></center>
           </body>
         </html>
-    """.format(background_value=background_value,border_value=border_value, website_name=website_name)
+    """.format(background_value=background_value, border_value=border_value, website_name=website_name)
 
     error_html = """
     <html>
@@ -53,11 +71,14 @@ def alexa_s3_website_create(event,context):
     #                                     policy='public-read')
 
     # to access bucket
-    src_website_bucket = conn.get_bucket(BUCKET_NAME)
 
     index_key = src_website_bucket.new_key('index.html')
     index_key.content_type = 'text/html'
     index_key.set_contents_from_string(index_html, policy='public-read')
+
+    property_key = src_website_bucket.new_key('properties.txt')
+    property_key.content_type = 'text/plain'
+    property_key.set_contents_from_string(background_value+'\n'+border_value+'\n'+website_name+'\n'+BUCKET_NAME, policy='public-read')
 
     website_bucket = conn.get_bucket(DEST_BUCKET_NAME)
     for k in website_bucket.list():
@@ -68,8 +89,12 @@ def alexa_s3_website_create(event,context):
         website_bucket.copy_key(k.key, BUCKET_NAME, k.key)
         website_bucket.set_acl('public-read',k.key)
     website_bucket.set_acl('public-read','index.html')
-    website_bucket.set_acl('public-read','dog.jpg')
-    website_bucket.set_acl('public-read','cat.jpg')
+    website_bucket.set_acl('public-read','savethehacker1.jpg')
+    website_bucket.set_acl('public-read','savethehacker2.jpg')
+    website_bucket.set_acl('public-read','womenwhocode1.png')
+    website_bucket.set_acl('public-read','womenwhocode2.jpg')
+    website_bucket.set_acl('public-read','properties.txt')
+    website_bucket.set_acl('public-read','properties1.txt')
 
     # error_key = website_bucket.new_key('error.html')
     # error_key.content_type = 'text/html'
@@ -81,6 +106,11 @@ def alexa_s3_website_create(event,context):
 
     # now get the website configuration, just to check it
     # return 'http://'+DEST_BUCKET_NAME+'.s3-website-'+S3_LOCATION+'.amazonaws.com/'
+    print {"isBase64Encoded": 'false',
+    "statusCode": 200,
+    "headers": {},
+    "body": '{"url":"http://'+DEST_BUCKET_NAME+'.s3-website-'+S3_LOCATION+'.amazonaws.com/"}'
+             }
 
     return {"isBase64Encoded": 'false',
     "statusCode": 200,
@@ -88,4 +118,3 @@ def alexa_s3_website_create(event,context):
     "body": '{"url":"http://'+DEST_BUCKET_NAME+'.s3-website-'+S3_LOCATION+'.amazonaws.com/"}'
              }
 
-# alexa_s3_website_create('{"body": "change-border,solid"}','')
